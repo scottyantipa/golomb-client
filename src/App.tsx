@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import './App.css';
 
 const SERVER_HOST = 'localhost';
 const SERVER_PORT = '8080';
@@ -102,13 +103,30 @@ const App: React.SFC = () => {
           </button>
         </div>
       </div>
-      <div style={{ whiteSpace: 'pre', margin: 20 }}>
-        <div>State:        {stateText}</div>
-        <div>Bound:        {objBound}</div>
-        <div>Current:      {currentVars}</div>
-        <div>Intermediate: {intermediateSolution || "n/a"}</div>
-        <div>Final:        {solution || "n/a"}</div>
-      </div>
+      <table className="results-table">
+        <tbody>
+          <tr>
+            <td>State:</td>
+            <td>{stateText}</td>
+          </tr>
+          <tr>
+            <td>Bound:</td>
+            <td>{objBound}</td>
+          </tr>
+          <tr>
+            <td>Current:</td>
+            <td>{currentVars}</td>
+          </tr>
+          <tr>
+            <td>Intermediate:</td>
+            <td>{intermediateSolution || "n/a"}</td>
+          </tr>
+          <tr>
+            <td>Result:</td>
+            <td>{solution || "n/a"}</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   )
 }
