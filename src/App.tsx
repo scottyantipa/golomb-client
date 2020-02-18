@@ -173,6 +173,7 @@ const Ruler: React.SFC<{solution: string}> = ({ solution }) => {
               left: markLeftPos(mark)
             }}
             key={mark}
+            className="mark"
           >
             <div
               style={{

@@ -10,3 +10,7 @@ table.results-table td {
 .ruler {
   margin: 40px 0px 0px 20px;
 }
+
+.ruler .mark {
+  transition: left 200ms linear;
+}
