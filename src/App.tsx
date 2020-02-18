@@ -9,12 +9,27 @@ enum SolverStates {
   Idle = 'Idle'
 }
 
+// _TODO_ Detect current state of solver on load.
 const App: React.SFC = () => {
+  /* Solver Inputs */
+  const [timeoutText, setTimeoutText] = useState('30');
+  const [orderText, setOrderText] = useState('5');
+
+  /* Solver state */
   const [solverState, setSolverState] = useState(SolverStates.Idle);
   const [solution, setSolution] = useState(undefined);
   const [intermediateSolution, setIntermediateSolution] = useState(undefined);
   const [objBound, setObjBound] = useState<Number>(Infinity);
   const [currentVars, setCurrentVars] = useState<String>("n/a");
+
+  /* UI state showing animated epsilon for search text */
+  const [timeElapsed, setTimeElapsed] = useState(0);
+  setTimeout(
+    () => {
+      setTimeElapsed(timeElapsed + 1);
+    },
+    100
+  )
 
   useEffect(
     () => {
@@ -52,17 +67,43 @@ const App: React.SFC = () => {
     []
   );
 
+  // _TODO_ these should be validators on the input components
+  const timeout = parseInt(timeoutText, 10);
+  const validatedTimeout = isNaN(timeout) ? 30 : timeout;
+  const order = parseInt(orderText, 10);
+  const validatedOrder = isNaN(order) ? 5 : order;
+
+  let stateText;
+  if (solverState === SolverStates.Searching) {
+    const numDots = timeElapsed % 5;
+    stateText = "Searching" + (".".repeat(numDots));
+  } else if (solverState === SolverStates.Idle) {
+    stateText = "Idle"
+  }
+
   return (
     <div>
-      <button onClick={() => {
-        fetch(`${SERVER_URL}/solve`);
-      }}>
-        Solve
-      </button>
-      <br />
-      <br />
+      <div style={{ margin: '20px 0 0 20px' }}>
+        <div>
+          <label style={{ marginRight: 15 }}>Timeout (s)</label>
+          <input type="number" value={timeoutText} onChange={(e) => setTimeoutText(e.target.value)} />
+        </div>
+        <div>
+          <label style={{ marginRight: 15 }}>Ruler Order</label>
+          <input type="number" value={orderText} onChange={(e) => setOrderText(e.target.value)} />
+        </div>
+        <div>
+          <button
+            onClick={() => {
+              fetch(`${SERVER_URL}/solve?timeout=${validatedTimeout}&order=${validatedOrder}`);
+            }}
+          >
+            Solve
+          </button>
+        </div>
+      </div>
       <div style={{ whiteSpace: 'pre', margin: 20 }}>
-        <div>State:        {solverState}</div>
+        <div>State:        {stateText}</div>
         <div>Bound:        {objBound}</div>
         <div>Current:      {currentVars}</div>
         <div>Intermediate: {intermediateSolution || "n/a"}</div>
