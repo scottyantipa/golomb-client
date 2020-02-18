@@ -5,3 +5,8 @@ table.results-table {
 table.results-table td {
   padding: 5px 20px;
 }
+
+/* Ruler component */
+.ruler {
+  margin: 40px 0px 0px 20px;
+}

@@ -82,6 +82,8 @@ const App: React.SFC = () => {
     stateText = "Idle"
   }
 
+  const solutionForRuler: string | undefined = solution ? solution : intermediateSolution;
+
   return (
     <div>
       <div style={{ margin: '20px 0 0 20px' }}>
@@ -127,8 +129,66 @@ const App: React.SFC = () => {
           </tr>
         </tbody>
       </table>
+      {solutionForRuler && <Ruler solution={solutionForRuler} />}
     </div>
   )
 }
+
+const Ruler: React.SFC<{solution: string}> = ({ solution }) => {
+  const width = 500;
+  const height = 100;
+  const markWidth = 3;
+
+  const marks: string[] = solution.split(',').map(s => s.trim());
+  const markInts: number[] = marks.map(m => parseInt(m, 10));
+
+  let markMax = 0;
+  markInts.forEach(mark => {
+    if (mark > markMax) markMax = mark;
+  });
+  const scale = width / markMax;
+  function markLeftPos(mark: number): number {
+    // scale then pull back to center
+    return mark * scale - (markWidth / 2);
+  }
+
+  return (
+    <div
+      className="ruler"
+      style={{
+        width,
+        height,
+        position: 'relative', // required for children abs pos
+        borderBottom: '2px solid blue'
+      }}
+    >
+      {markInts.map((mark: number) => {
+        return (
+          <div
+            style={{
+              position: 'absolute',
+              width: markWidth,
+              height,
+              backgroundColor: 'blue',
+              left: markLeftPos(mark)
+            }}
+            key={mark}
+          >
+            <div
+              style={{
+                position: 'absolute',
+                top: height + 5,
+                fontSize: 11,
+                fontWeight: 'bold'
+              }}
+            >
+              {mark}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+};
 
 export default App;
