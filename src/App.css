@@ -1,5 +1,5 @@
 table.results-table {
-  margin: 20px 0px 0px 20px;
+  margin: 110px 0px 0px 20px;
 }
 
 table.results-table td {
@@ -8,7 +8,7 @@ table.results-table td {
 
 /* Ruler component */
 .ruler {
-  margin: 40px 0px 0px 20px;
+  margin: 20px 0px 0px 20px;
 }
 
 .ruler .mark {

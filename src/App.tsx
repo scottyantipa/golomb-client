@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { VictoryLine, VictoryChart, VictoryTheme, VictoryLabel } from 'victory';
 import './App.css';
 
 const SERVER_HOST = 'localhost';
@@ -10,6 +11,8 @@ enum SolverStates {
   Idle = 'Idle'
 }
 
+type IOrderHistory = { time: number, order: number}[];
+
 // _TODO_ Detect current state of solver on load.
 const App: React.SFC = () => {
   /* Solver Inputs */
@@ -17,11 +20,14 @@ const App: React.SFC = () => {
   const [orderText, setOrderText] = useState('5');
 
   /* Solver state */
+  const [solveStartTime, setSolveStartTime] = useState<number | undefined>(undefined);
   const [solverState, setSolverState] = useState(SolverStates.Idle);
   const [solution, setSolution] = useState(undefined);
   const [intermediateSolution, setIntermediateSolution] = useState(undefined);
-  const [objBound, setObjBound] = useState<Number>(Infinity);
+  const [objBound, setObjBound] = useState<Number>(0);
   const [currentVars, setCurrentVars] = useState<String>("n/a");
+  const [currentOrder, setCurrentOrder] = useState<String>("n/a");
+  const [orderHistory, setOrderHistory] = useState<IOrderHistory>([]);
 
   /* UI state showing animated epsilon for search text */
   const [timeElapsed, setTimeElapsed] = useState(0);
@@ -43,10 +49,19 @@ const App: React.SFC = () => {
             setSolverState(SolverStates.Searching);
             setIntermediateSolution(undefined);
             setSolution(undefined);
+            setCurrentOrder('n/a');
+            setOrderHistory([]);
             break;
           case 'Periodic':
             setSolverState(SolverStates.Searching);
             setCurrentVars(eventData);
+            break;
+          case 'NewOrder':
+            setCurrentOrder(eventData);
+            setOrderHistory((currHistory) => {
+              const newHistory = [...currHistory, { time: Date.now(), order: parseInt(eventData, 10) }];
+              return newHistory;
+            });
             break;
           case 'ObjBound':
             setObjBound(parseInt(eventData));
@@ -98,18 +113,29 @@ const App: React.SFC = () => {
         <div>
           <button
             onClick={() => {
+              setSolveStartTime(Date.now());
               fetch(`${SERVER_URL}/solve?timeout=${validatedTimeout}&order=${validatedOrder}`);
             }}
           >
             Solve
           </button>
         </div>
+        <div style={{ marginTop: 20, marginBottom: 20 }}>State: {stateText}</div>
+      </div>
+      {solutionForRuler && (
+        <div>
+          <h5>Current Best Ruler</h5>
+          <Ruler solution={solutionForRuler} />
+        </div>
+      )}
+      <div style={{ marginTop: 20 }}>
+        {(orderHistory.length > 0) && <OrderHistory orderHistory={orderHistory} />}
       </div>
       <table className="results-table">
         <tbody>
           <tr>
-            <td>State:</td>
-            <td>{stateText}</td>
+            <td>Start:</td>
+            <td>{solveStartTime || "n/a"}</td>
           </tr>
           <tr>
             <td>Bound:</td>
@@ -118,6 +144,10 @@ const App: React.SFC = () => {
           <tr>
             <td>Current:</td>
             <td>{currentVars}</td>
+          </tr>
+          <tr>
+            <td>Order:</td>
+            <td>{currentOrder}</td>
           </tr>
           <tr>
             <td>Intermediate:</td>
@@ -129,7 +159,6 @@ const App: React.SFC = () => {
           </tr>
         </tbody>
       </table>
-      {solutionForRuler && <Ruler solution={solutionForRuler} />}
     </div>
   )
 }
@@ -191,5 +220,34 @@ const Ruler: React.SFC<{solution: string}> = ({ solution }) => {
     </div>
   );
 };
+
+const OrderHistory: React.SFC<{orderHistory: IOrderHistory}> = (props) => {
+  const { orderHistory } = props;
+  return (
+    <div
+      style={{
+        width: 400,
+        height: 400
+      }}
+    >
+      <h5>Objective Fn</h5>
+      <VictoryChart
+        theme={VictoryTheme.material}
+        padding={{ top: 10, left: 40, right: 40, bottom: 40 }}
+      >
+        <VictoryLine
+          scale={{ x: "time", y: "linear" }}
+          data={orderHistory.map((point) => {
+            return { x: point.time, y: point.order };
+          })}
+          style={{
+            data: { stroke: "#c43a31" },
+            parent: { border: "1px solid #ccc"}
+          }}
+        />
+      </VictoryChart>
+    </div>
+  )
+}
 
 export default App;
