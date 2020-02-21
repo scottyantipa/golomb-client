@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { VictoryLine, VictoryChart, VictoryTheme, VictoryLabel } from 'victory';
+import { VictoryLine, VictoryChart, VictoryTheme } from 'victory';
 import './App.css';
 
 const SERVER_HOST = 'localhost';
@@ -12,6 +12,7 @@ enum SolverStates {
 }
 
 type IOrderHistory = { time: number, order: number}[];
+type IBoundHistory = { time: number, bound: number}[];
 
 // _TODO_ Detect current state of solver on load.
 const App: React.SFC = () => {
@@ -28,6 +29,8 @@ const App: React.SFC = () => {
   const [currentVars, setCurrentVars] = useState<String>("n/a");
   const [currentOrder, setCurrentOrder] = useState<String>("n/a");
   const [orderHistory, setOrderHistory] = useState<IOrderHistory>([]);
+  const [boundHistory, setBoundHistory] = useState<IBoundHistory>([]);
+
 
   /* UI state showing animated epsilon for search text */
   const [timeElapsed, setTimeElapsed] = useState(0);
@@ -65,6 +68,10 @@ const App: React.SFC = () => {
             break;
           case 'ObjBound':
             setObjBound(parseInt(eventData));
+            setBoundHistory((existingHistory: IBoundHistory) => {
+              const newHistory = [...existingHistory, { time: Date.now(), bound: parseInt(eventData, 10)}];
+              return newHistory;
+            })
             break;
           case 'NewSolution':
             setIntermediateSolution(eventData);
@@ -128,8 +135,9 @@ const App: React.SFC = () => {
           <Ruler solution={solutionForRuler} />
         </div>
       )}
-      <div style={{ marginTop: 20 }}>
+      <div style={{ marginTop: 20, display: 'flex', flexDirection: 'row' }}>
         {(orderHistory.length > 0) && <OrderHistory orderHistory={orderHistory} />}
+        {(boundHistory.length > 0) && <BoundHistory boundHistory={boundHistory} />}
       </div>
       <table className="results-table">
         <tbody>
@@ -230,7 +238,7 @@ const OrderHistory: React.SFC<{orderHistory: IOrderHistory}> = (props) => {
         height: 400
       }}
     >
-      <h5>Objective Fn</h5>
+      <h5>Objective</h5>
       <VictoryChart
         theme={VictoryTheme.material}
         padding={{ top: 10, left: 40, right: 40, bottom: 40 }}
@@ -239,6 +247,36 @@ const OrderHistory: React.SFC<{orderHistory: IOrderHistory}> = (props) => {
           scale={{ x: "time", y: "linear" }}
           data={orderHistory.map((point) => {
             return { x: point.time, y: point.order };
+          })}
+          style={{
+            data: { stroke: "#c43a31" },
+            parent: { border: "1px solid #ccc"}
+          }}
+        />
+      </VictoryChart>
+    </div>
+  )
+}
+
+
+const BoundHistory: React.SFC<{boundHistory: IBoundHistory}> = (props) => {
+  const { boundHistory } = props;
+  return (
+    <div
+      style={{
+        width: 400,
+        height: 400
+      }}
+    >
+      <h5>Objective Lower Bound</h5>
+      <VictoryChart
+        theme={VictoryTheme.material}
+        padding={{ top: 10, left: 40, right: 40, bottom: 40 }}
+      >
+        <VictoryLine
+          scale={{ x: "time", y: "linear" }}
+          data={boundHistory.map((point) => {
+            return { x: point.time, y: point.bound };
           })}
           style={{
             data: { stroke: "#c43a31" },
